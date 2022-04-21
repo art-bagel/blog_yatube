@@ -62,7 +62,7 @@ class PostFormTests(TestCase):
         """При отправке формы, в базе данных создается новый пост с изображением.
         После создания происходит редирект на профиль автора.
         """
-        post_count = Post.objects.all().count()
+        post_count = Post.objects.count()
         form_data = {
             'text': 'Еще один пост',
             'group': self.group_1.id,
@@ -154,7 +154,7 @@ class CommentFormTest(TestCase):
         """При отправке формы, в базе данных создается новый комментарий к
         выбранному посту. После происходит редирект на страницу с постом.
         """
-        comments_count = Comment.objects.all().count()
+        comments_count = Comment.objects.count()
         form_data = {'text': 'Комментарий к посту'}
         response = self.authorized_client.post(
             reverse('posts:add_comment', args=[self.post.id]),
