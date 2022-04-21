@@ -138,8 +138,8 @@ def follow_index(request: HttpRequest) -> HttpResponse:
 def profile_follow(request: HttpRequest, username: str) -> HttpResponse:
     """Добавление подписки на автора."""
     author, user, following = _get_follow_info(request, username)
-    if not following.exists() and user.id != author.id:
-        author.following.create(user_id=user.id)
+    if user.id != author.id:
+        author.following.get_or_create(user_id=user.id)
     return redirect('posts:follow_index')
 
 

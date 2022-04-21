@@ -377,15 +377,15 @@ class FollowViewTests(TestCase):
             author=self.author_2,
             group=self.group_2,
         )
-        self.authorized_client_1.get(
-            reverse('posts:profile_follow', args=[self.author_1.username])
-        )
         self.authorized_client_2.get(
             reverse('posts:profile_follow', args=[self.author_2.username])
         )
 
     def test_authorized_user_can_subscribe(self):
         """Авторизованный пользователь может подписаться на автора."""
+        self.authorized_client_1.get(
+            reverse('posts:profile_follow', args=[self.author_1.username])
+        )
         is_subscribe = Follow.objects.filter(author_id=self.author_1.id,
                                              user_id=self.user_1.id
                                              ).exists()
@@ -393,16 +393,19 @@ class FollowViewTests(TestCase):
 
     def test_authorized_user_can_unsubscribe(self):
         """Авторизованный пользователь может отписаться от автора."""
-        self.authorized_client_1.get(
-            reverse('posts:profile_unfollow', args=[self.author_1.username])
+        self.authorized_client_2.get(
+            reverse('posts:profile_unfollow', args=[self.author_2.username])
         )
-        is_subscribe = Follow.objects.filter(author_id=self.author_1.id,
-                                             user_id=self.user_1.id
+        is_subscribe = Follow.objects.filter(author_id=self.author_2.id,
+                                             user_id=self.user_2.id
                                              ).exists()
         self.assertFalse(is_subscribe, 'Пользователь не смог отписаться!')
 
     def test_appears_on_subscribers(self):
         """Новый пост автора появляется в ленте у подписчиков."""
+        self.authorized_client_1.get(
+            reverse('posts:profile_follow', args=[self.author_1.username])
+        )
         new_post = Post.objects.create(
             text='new_post',
             author=self.author_1,
@@ -416,6 +419,9 @@ class FollowViewTests(TestCase):
 
     def test_does_not_appear_on_non_subscriber(self):
         """Новый пост не появляется у тех, кто не подписался."""
+        self.authorized_client_1.get(
+            reverse('posts:profile_follow', args=[self.author_1.username])
+        )
         new_post = Post.objects.create(
             text='new_post_2',
             author=self.author_1,

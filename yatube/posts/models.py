@@ -52,7 +52,7 @@ class Post(CreatedModel):
 
 
 class Comment(CreatedModel):
-    text = models.TextField(verbose_name='Ваш комментарий')
+    text = models.TextField(verbose_name='Комментарий')
     post = models.ForeignKey(Post,
                              on_delete=models.CASCADE,
                              related_name='comments'
@@ -73,17 +73,24 @@ class Comment(CreatedModel):
 
 class Follow(models.Model):
     user = models.ForeignKey(User,
+                             verbose_name='Подписчик',
                              on_delete=models.CASCADE,
                              related_name='follower'
                              )
     author = models.ForeignKey(User,
+                               verbose_name='Автор',
                                on_delete=models.CASCADE,
                                related_name='following'
                                )
 
     class Meta:
-        unique_together = ['user', 'author']
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
         constraints = [
+            models.UniqueConstraint(fields=['user', 'author'],
+                                    name='unique_subscriptions'
+                                    ),
             models.CheckConstraint(check=(~models.Q(user=models.F('author'))),
-                                   name='author_and_user_are_different'),
+                                   name='author_and_user_are_different'
+                                   ),
         ]

@@ -1,3 +1,4 @@
+import shutil
 import tempfile
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -35,6 +36,11 @@ class PostFormTests(TestCase):
             b'\x0A\x00\x3B'
         )
 
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
     def setUp(self):
         """Создаем клиента и пост."""
         self.authorized_client = Client()
@@ -49,6 +55,7 @@ class PostFormTests(TestCase):
             name='small.gif',
             content=self.small_gif,
             content_type='image/gif'
+
         )
 
     def test_create_post_form(self):
@@ -65,22 +72,30 @@ class PostFormTests(TestCase):
             reverse('posts:post_create'),
             data=form_data
         )
+        new_post = Post.objects.latest('id')
         self.assertEqual(
             Post.objects.all().count(),
             post_count + 1,
             'Пост не сохранен в базу данных!'
         )
+        self.assertEqual(
+            new_post.text,
+            form_data.get('text'),
+            'Текст поста не соответствует переданному!'
+        )
+        self.assertEqual(
+            new_post.group_id,
+            form_data.get('group'),
+            'Пост не был привязан к ожидаемой группе!'
+        )
+        self.assertEqual(
+            new_post.image.name.split('/')[-1],
+            form_data.get('image').name,
+            'В созданном посте отсутствует картинка!'
+        )
         self.assertRedirects(
             response,
             reverse('posts:profile', args=[self.author.username])
-        )
-        self.assertTrue(
-            Post.objects.filter(
-                group_id=form_data['group'],
-                text=form_data['text'],
-                image='posts/small.gif'
-            ).exists(),
-            'В созданном посте отсутствует картинка!'
         )
 
     def test_edit_post_form(self):
@@ -136,18 +151,30 @@ class CommentFormTest(TestCase):
         )
 
     def test_write_comment(self):
-        """При отправке формы, в базе данных создается новый комментарий.
-        После создания происходит редирект на страницу с постом.
+        """При отправке формы, в базе данных создается новый комментарий к
+        выбранному посту. После происходит редирект на страницу с постом.
         """
         comments_count = Comment.objects.all().count()
+        form_data = {'text': 'Комментарий к посту'}
         response = self.authorized_client.post(
             reverse('posts:add_comment', args=[self.post.id]),
-            data={'text': 'Комментарий к посту'}
+            data=form_data
         )
+        new_comment = Comment.objects.latest('id')
         self.assertEqual(
             Comment.objects.all().count(),
             comments_count + 1,
             'Комментарий не сохранен в базе данных!'
+        )
+        self.assertEqual(
+            new_comment.text,
+            form_data.get('text'),
+            'Текст комментария не соответствует переданному!'
+        )
+        self.assertEqual(
+            new_comment.post_id,
+            self.post.id,
+            'Комментарий не был привязан к ожидаемому посту!'
         )
         self.assertRedirects(
             response,
