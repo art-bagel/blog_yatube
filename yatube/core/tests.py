@@ -37,7 +37,7 @@ class ViewTestClass(TestCase):
             reverse('posts:post_edit', args=[self.post.id]),
             data={'text': 'Измененный текст'}
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         self.assertTemplateUsed(response, 'core/403.html')
 
     def test_error_csrf_failure(self):

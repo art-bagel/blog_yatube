@@ -74,15 +74,13 @@ class PostURLTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_post_edit_url_redirect_not_author_on_post(self):
-        """Страница редактирования поста, перенаправит всех, кроме автора
-         на страницу поста.
+        """Страница редактирования поста, выдаст 403 ошибку всем, кроме автора
+         поста.
         """
         response = self.authorized_client.get(
             reverse('posts:post_edit', args=[self.post.id]), follow=True
         )
-        self.assertRedirects(
-            response, reverse('posts:post_detail', args=[self.post.id])
-        )
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
     def test_post_create_url_available_authorized_user(self):
         """Страница создания поста доступна авторизованному пользователю."""
