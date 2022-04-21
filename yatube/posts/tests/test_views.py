@@ -426,3 +426,26 @@ class FollowViewTests(TestCase):
         self.assertNotEqual(response.context.get('page_obj')[0], new_post,
                             'Новый пост отображается у тех, кто не подписался!'
                             )
+
+    def test_author_can_not_follow_himself(self):
+        """Автор не может подписаться на самого себя."""
+        self.authorized_client_author_1.get(
+            reverse('posts:profile_follow', args=[self.author_1.username])
+        )
+        is_subscribe = Follow.objects.filter(author_id=self.author_1.id,
+                                             user_id=self.author_1.id
+                                             ).exists()
+        self.assertFalse(is_subscribe, 'Автор смог подписаться на себя!')
+
+    def test_double_subscription(self):
+        """Нельзя подписаться два раза на одного автора."""
+        self.authorized_client_1.get(
+            reverse('posts:profile_follow', args=[self.author_2.username])
+        )
+        self.authorized_client_1.get(
+            reverse('posts:profile_follow', args=[self.author_2.username])
+        )
+        count = Follow.objects.filter(author_id=self.author_2.id,
+                                      user_id=self.user_1.id
+                                      ).count()
+        self.assertEqual(count, 1, 'Двойная подписка на одного автора!')
